@@ -14,6 +14,7 @@ const updateTaskSchema = z.object({
   assignees: z.array(z.string()).optional(),
   deadline: z.string().optional().nullable(),
   progress: z.number().min(0).max(100).optional(),
+  priority: z.enum(["low", "medium", "high"]).optional(),
   status: z.enum(["todo", "in-progress", "done"]).optional(),
   order: z.number().optional(),
   archived: z.boolean().optional(),

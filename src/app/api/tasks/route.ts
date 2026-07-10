@@ -16,6 +16,7 @@ const taskSchema = z.object({
   assignees: z.array(z.string()).optional(),
   deadline: z.string().optional().nullable(),
   progress: z.number().min(0).max(100).optional(),
+  priority: z.enum(["low", "medium", "high"]).optional(),
   sendEmail: z.boolean().optional(),
 });
 

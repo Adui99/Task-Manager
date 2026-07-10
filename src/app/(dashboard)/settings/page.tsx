@@ -74,9 +74,21 @@ export default function SettingsPage() {
       return;
     }
     
+    let cleanAvatar = formData.avatar.trim();
+    if (cleanAvatar.startsWith('"') && cleanAvatar.endsWith('"')) {
+      cleanAvatar = cleanAvatar.slice(1, -1);
+    } else if (cleanAvatar.startsWith("'") && cleanAvatar.endsWith("'")) {
+      cleanAvatar = cleanAvatar.slice(1, -1);
+    }
+    
+    if (cleanAvatar && !cleanAvatar.startsWith('http') && !cleanAvatar.startsWith('data:')) {
+      toast.error("URL ảnh đại diện phải là link web hợp lệ (bắt đầu bằng http:// hoặc https://)");
+      return;
+    }
+    
     updateProfileMutation.mutate({
       email: formData.email,
-      avatar: formData.avatar,
+      avatar: cleanAvatar,
       ...(formData.password ? { password: formData.password } : {})
     });
   };
