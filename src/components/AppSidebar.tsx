@@ -63,13 +63,14 @@ export function AppSidebar({ userRole }: { userRole: string | undefined }) {
     <Sidebar className="border-r border-r-border/50 [&_[data-slot=sidebar-inner]]:bg-white dark:[&_[data-slot=sidebar-inner]]:bg-card [&_[data-slot=sidebar-inner]]:text-slate-900 dark:[&_[data-slot=sidebar-inner]]:text-card-foreground">
       <SidebarContent>
         <SidebarGroup>
-          <div className="px-2 mb-6 mt-4">
-            <div className="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-sm bg-white border border-slate-200 dark:border-slate-800">
+          <div className="px-2 mb-6 mt-4 flex items-center gap-3">
+            <div className="w-14 h-14 shrink-0 flex items-center justify-center">
               <img src="/logo.png" alt="KTD Logo" className="w-full h-full object-contain" onError={(e) => {
                 e.currentTarget.style.display = 'none';
-                e.currentTarget.parentElement!.innerHTML = '<div class="bg-indigo-600 text-white w-full h-full flex items-center justify-center text-xl font-black tracking-wider">KTD</div>';
+                e.currentTarget.parentElement!.innerHTML = '<div class="bg-indigo-600 text-white w-full h-full rounded flex items-center justify-center text-xl font-black tracking-wider">KD</div>';
               }} />
             </div>
+            <span className="text-[13px] font-bold text-foreground uppercase tracking-[0.15em] truncate">Key To Destiny</span>
           </div>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2 mt-4">

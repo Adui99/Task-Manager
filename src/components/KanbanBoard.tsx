@@ -447,7 +447,7 @@ export function KanbanBoard({ userRole, userId }: { userRole?: string, userId?: 
   return (
     <div className="h-full flex flex-col">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Task Manager ver 1.0</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">KTD Workspace</h1>
         
         <div className="flex items-center gap-4">
           {/* Language Toggle */}

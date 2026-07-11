@@ -10,6 +10,7 @@ export interface ITask extends Document {
   order: number;
   progress: number;
   archived: boolean;
+  adminNotifiedOverdue: boolean;
   comments: {
     user_id: mongoose.Types.ObjectId;
     content: string;
@@ -31,6 +32,7 @@ const TaskSchema: Schema = new Schema(
     order: { type: Number, default: 0 },
     progress: { type: Number, default: 0, min: 0, max: 100 },
     archived: { type: Boolean, default: false },
+    adminNotifiedOverdue: { type: Boolean, default: false },
     comments: [{
       user_id: { type: Schema.Types.ObjectId, ref: "User" },
       content: { type: String, required: true },

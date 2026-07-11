@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import dbConnect from "@/lib/mongodb";
 import Task from "@/models/Task";
 import User from "@/models/User";
-import { sendTaskAssignmentEmail } from "@/lib/sendEmail";
+import { sendTaskAssignmentEmail, sendAdminOverdueEmail } from "@/lib/sendEmail";
 import { z } from "zod";
 import rateLimit from "@/lib/rate-limit";
 import { logAudit } from "@/lib/audit";
@@ -37,6 +37,36 @@ export async function GET() {
       status: "done",
       updatedAt: { $lte: sevenDaysAgo }
     });
+
+    // Auto-archive 'done' tasks that are 3 days past their deadline (phòng backup)
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    await Task.updateMany(
+      { status: "done", deadline: { $lte: threeDaysAgo }, archived: false },
+      { $set: { archived: true } }
+    );
+
+    // Notify admin for 'todo' and 'in-progress' tasks that are 3 days past their deadline
+    const overdueTasks = await Task.find({
+      status: { $ne: "done" },
+      deadline: { $lte: threeDaysAgo },
+      adminNotifiedOverdue: { $ne: true },
+      archived: false
+    });
+
+    if (overdueTasks.length > 0) {
+      const admins = await User.find({ role: { $in: ["admin", "vice_admin"] } });
+      const adminEmails = admins.map(admin => admin.email).filter(Boolean);
+      
+      if (adminEmails.length > 0) {
+        await sendAdminOverdueEmail(adminEmails as string[], overdueTasks);
+        
+        const overdueTaskIds = overdueTasks.map(t => t._id);
+        await Task.updateMany(
+          { _id: { $in: overdueTaskIds } },
+          { $set: { adminNotifiedOverdue: true } }
+        );
+      }
+    }
 
     // Auto-migrate old tasks with assignee_id to assignees array
     await Task.collection.updateMany(

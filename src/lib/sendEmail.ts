@@ -72,3 +72,37 @@ export const sendOverdueReminderEmail = async (userEmail: string, userName: stri
     console.error("Lỗi khi gửi email nhắc nhở:", error);
   }
 };
+
+export const sendAdminOverdueEmail = async (adminEmails: string[], tasks: any[]) => {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.warn("SMTP credentials missing. Skipping email notification.");
+    return;
+  }
+
+  const tasksHtml = tasks.map(t => `<li><strong>${t.title}</strong> (Deadline: ${new Date(t.deadline).toLocaleDateString('vi-VN')} - Trạng thái: ${t.status})</li>`).join("");
+
+  const mailOptions = {
+    from: `"Mini Kanban AI" <${process.env.SMTP_USER}>`,
+    to: adminEmails.join(","),
+    subject: `[Báo cáo Admin] Có ${tasks.length} công việc đã trễ deadline quá 3 ngày`,
+    html: `
+      <h2>Kính gửi Ban Quản Trị,</h2>
+      <p>Hệ thống ghi nhận có <strong>${tasks.length}</strong> công việc đã vượt quá thời hạn (Deadline) hơn 3 ngày nhưng vẫn chưa hoàn thành:</p>
+      <ul>
+        ${tasksHtml}
+      </ul>
+      <p>Vui lòng đăng nhập vào hệ thống để xem xét và có biện pháp xử lý kịp thời.</p>
+      <p><a href="https://task-manager-ktd.vercel.app/">Truy cập hệ thống Kanban tại đây</a></p>
+      <br/>
+      <hr />
+      <p><small>Đây là email báo cáo tự động từ hệ thống Mini Kanban AI. Vui lòng không trả lời.</small></p>
+    `,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Admin overdue report email sent: " + info.response);
+  } catch (error) {
+    console.error("Lỗi khi gửi email báo cáo admin:", error);
+  }
+};
