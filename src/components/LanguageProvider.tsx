@@ -86,6 +86,13 @@ const translations = {
     sendSelectedReminders: "Gửi email",
     selectAll: "Chọn tất cả",
     deselectAll: "Bỏ chọn tất cả",
+
+    // Chat
+    messages: "Tin nhắn",
+    noMessages: "Chưa có tin nhắn nào. Hãy bắt đầu trò chuyện!",
+    typeMessage: "Nhập tin nhắn...",
+    send: "Gửi",
+    selectUserToChat: "Chọn một người để bắt đầu trò chuyện",
   },
   en: {
     // Kanban Board
@@ -163,6 +170,13 @@ const translations = {
     sendSelectedReminders: "Send emails",
     selectAll: "Select All",
     deselectAll: "Deselect All",
+
+    // Chat
+    messages: "Messages",
+    noMessages: "No messages yet. Start chatting!",
+    typeMessage: "Type a message...",
+    send: "Send",
+    selectUserToChat: "Select a user to start chatting",
   }
 };
 

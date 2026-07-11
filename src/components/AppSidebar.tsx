@@ -105,7 +105,7 @@ export function AppSidebar({ userRole }: { userRole: string | undefined }) {
                 >
                   <div className="flex items-center gap-3 w-full">
                     <MessageCircle className="w-5 h-5" />
-                    <span>Tin nhắn</span>
+                    <span>{t('messages')}</span>
                   </div>
                 </SidebarMenuButton>
               </SidebarMenuItem>

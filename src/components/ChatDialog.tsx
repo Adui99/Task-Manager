@@ -84,7 +84,7 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
         {/* Left Column: User List */}
         <div className="w-1/3 border-r bg-muted/20 flex flex-col h-full">
           <div className="p-4 border-b font-semibold bg-muted/40">
-            Tin nhắn
+            {t("messages")}
           </div>
           <ScrollArea className="flex-1">
             <div className="p-2 space-y-1">
@@ -133,7 +133,7 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
               <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
                 {messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                    Chưa có tin nhắn nào. Hãy bắt đầu trò chuyện!
+                    {t("noMessages")}
                   </div>
                 ) : (
                   messages.map((msg: any) => {
@@ -162,7 +162,7 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
                 <Textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Nhập tin nhắn..."
+                  placeholder={t("typeMessage")}
                   className="min-h-[40px] max-h-[120px] resize-none"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -176,13 +176,13 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
                   disabled={!message.trim() || sendMessageMutation.isPending}
                   className="mb-1"
                 >
-                  Gửi
+                  {t("send")}
                 </Button>
               </div>
             </>
           ) : (
             <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-              Chọn một người để bắt đầu trò chuyện
+              {t("selectUserToChat")}
             </div>
           )}
         </div>

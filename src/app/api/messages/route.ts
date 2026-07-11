@@ -38,6 +38,12 @@ export async function GET(req: Request) {
       ]
     }).sort({ createdAt: 1 });
 
+    // Mark as read
+    await Message.updateMany(
+      { sender_id: otherUserId, receiver_id: userId, read: false },
+      { $set: { read: true } }
+    );
+
     return NextResponse.json(messages);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
