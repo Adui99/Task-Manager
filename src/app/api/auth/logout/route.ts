@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { logAudit } from "@/lib/audit";
-import { headers } from "next/headers";
+import { verifyAuth } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
     const ip = req.headers.get("x-forwarded-for") ?? "anonymous";
-    const headerList = await headers();
-    const userId = headerList.get("x-user-id");
+    const session = await verifyAuth();
+    const userId = session?.userId;
 
     if (userId) {
       await logAudit("LOGOUT", userId, {}, ip);

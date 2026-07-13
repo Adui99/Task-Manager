@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Task from "@/models/Task";
-import { headers } from "next/headers";
+import { verifyAuth } from "@/lib/auth";
 import { z } from "zod";
 import { logAudit } from "@/lib/audit";
 import rateLimit from "@/lib/rate-limit";
@@ -26,9 +26,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     try { await limiter.check(100, ip); } catch { return NextResponse.json({ message: "Too many requests" }, { status: 429 }); }
 
     await dbConnect();
-    const headerList = await headers();
-    const role = headerList.get("x-user-role");
-    const userId = headerList.get("x-user-id");
+    const session = await verifyAuth();
+    const role = session?.role;
+    const userId = session?.userId;
 
     if (role !== "admin" && role !== "vice_admin") {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
@@ -63,9 +63,9 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     try { await limiter.check(100, ip); } catch { return NextResponse.json({ message: "Too many requests" }, { status: 429 }); }
 
     await dbConnect();
-    const headerList = await headers();
-    const role = headerList.get("x-user-role");
-    const userId = headerList.get("x-user-id");
+    const session = await verifyAuth();
+    const role = session?.role;
+    const userId = session?.userId;
 
     if (role !== "admin" && role !== "vice_admin") {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });

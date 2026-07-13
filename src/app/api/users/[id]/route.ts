@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
-import { headers } from "next/headers";
+import { verifyAuth } from "@/lib/auth";
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   await dbConnect();
-  const headerList = await headers();
-  const role = headerList.get("x-user-role");
+  const session = await verifyAuth();
+  const role = session?.role;
 
   if (role !== "admin") {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
@@ -32,8 +32,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   await dbConnect();
-  const headerList = await headers();
-  const role = headerList.get("x-user-role");
+  const session = await verifyAuth();
+  const role = session?.role;
 
   if (role !== "admin") {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });

@@ -1194,8 +1194,8 @@ export function KanbanBoard({ userRole, userId }: { userRole?: string, userId?: 
                         if (res.ok) {
                           toast.success(
                             lang === 'vi' 
-                              ? `Đã gửi ${data.usersNotified} email nhắc nhở.` 
-                              : `Sent ${data.usersNotified} reminder emails.`
+                              ? `Đã gửi thông báo cho ${data.usersNotified} người dùng.` 
+                              : `Sent notifications to ${data.usersNotified} users.`
                           );
                           setIsAdminReminderOpen(false);
                         } else {

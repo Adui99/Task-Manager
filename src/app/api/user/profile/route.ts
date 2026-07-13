@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
-import { headers } from "next/headers";
+import { verifyAuth } from "@/lib/auth";
 
 export async function GET() {
   await dbConnect();
   try {
-    const headersList = await headers();
-    const userId = headersList.get("x-user-id");
+    const session = await verifyAuth();
+    const userId = session?.userId;
     
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -28,8 +28,8 @@ export async function GET() {
 export async function PUT(req: Request) {
   await dbConnect();
   try {
-    const headersList = await headers();
-    const userId = headersList.get("x-user-id");
+    const session = await verifyAuth();
+    const userId = session?.userId;
     
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

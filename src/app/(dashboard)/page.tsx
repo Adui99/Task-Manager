@@ -1,10 +1,10 @@
 import { KanbanBoard } from "@/components/KanbanBoard";
-import { headers } from "next/headers";
+import { verifyAuth } from "@/lib/auth";
 
 export default async function DashboardPage() {
-  const headerList = await headers();
-  const userRole = headerList.get("x-user-role") || undefined;
-  const userId = headerList.get("x-user-id") || undefined;
+  const session = await verifyAuth();
+  const userRole = session?.role || undefined;
+  const userId = session?.userId || undefined;
 
   return (
     <div className="h-full">

@@ -9,10 +9,15 @@ const JWT_SECRET = env.JWT_SECRET;
 export async function proxy(request: NextRequest) {
   const token = request.cookies.get('auth_token')?.value;
 
-  const isAuthPage = request.nextUrl.pathname.startsWith('/login');
+  const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
+                     request.nextUrl.pathname.startsWith('/forgot-password') ||
+                     request.nextUrl.pathname.startsWith('/reset-password');
   
   // Public API routes
-  if (request.nextUrl.pathname.startsWith('/api/auth/login') || request.nextUrl.pathname.startsWith('/api/auth/seed')) {
+  if (request.nextUrl.pathname.startsWith('/api/auth/login') || 
+      request.nextUrl.pathname.startsWith('/api/auth/seed') ||
+      request.nextUrl.pathname.startsWith('/api/auth/forgot-password') ||
+      request.nextUrl.pathname.startsWith('/api/auth/reset-password')) {
     return NextResponse.next();
   }
 

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Task from "@/models/Task";
-import { headers } from "next/headers";
+import { verifyAuth } from "@/lib/auth";
 
 export async function POST(req: Request) {
   await dbConnect();
-  const headerList = await headers();
-  const role = headerList.get("x-user-role");
+  const session = await verifyAuth();
+  const role = session?.role;
 
   if (role !== "admin" && role !== "vice_admin") {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });

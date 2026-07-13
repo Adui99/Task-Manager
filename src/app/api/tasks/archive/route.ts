@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyAuth } from "@/lib/auth";
 import dbConnect from "@/lib/mongodb";
 import Task from "@/models/Task";
 

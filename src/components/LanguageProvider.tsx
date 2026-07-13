@@ -82,8 +82,8 @@ const translations = {
     sendEmailLabel: "Gửi thông báo qua Email",
     adminReminderTitle: "Quản lý nhắc nhở quá hạn",
     noOverdueTasks: "Hiện không có công việc nào bị quá hạn.",
-    selectTasksToSend: "Chọn các công việc để gửi email nhắc nhở:",
-    sendSelectedReminders: "Gửi email",
+    selectTasksToSend: "Chọn các công việc để gửi thông báo nhắc nhở:",
+    sendSelectedReminders: "Gửi thông báo",
     selectAll: "Chọn tất cả",
     deselectAll: "Bỏ chọn tất cả",
 

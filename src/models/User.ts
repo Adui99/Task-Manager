@@ -7,6 +7,8 @@ export interface IUser extends Document {
   role: "admin" | "vice_admin" | "user";
   avatar?: string;
   skills: string[];
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,6 +21,8 @@ const UserSchema: Schema = new Schema(
     role: { type: String, enum: ["admin", "vice_admin", "user"], default: "user" },
     avatar: { type: String },
     skills: { type: [String], default: [] },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
   },
   { timestamps: true }
 );

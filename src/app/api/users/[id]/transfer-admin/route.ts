@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
-import { headers } from "next/headers";
+import { verifyAuth } from "@/lib/auth";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   await dbConnect();
-  const headerList = await headers();
-  const role = headerList.get("x-user-role");
-  const currentUserId = headerList.get("x-user-id");
+  const session = await verifyAuth();
+  const role = session?.role;
+  const currentUserId = session?.userId;
 
   // Only admin can transfer admin rights
   if (role !== "admin") {

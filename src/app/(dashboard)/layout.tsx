@@ -1,6 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { headers } from "next/headers";
+import { verifyAuth } from "@/lib/auth";
 import { HeaderProfile } from "@/components/HeaderProfile";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
@@ -10,9 +10,9 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const headerList = await headers();
-  const userRole = headerList.get("x-user-role") || undefined;
-  const userId = headerList.get("x-user-id");
+  const session = await verifyAuth();
+  const userRole = session?.role || undefined;
+  const userId = session?.userId;
 
   let user = null;
   if (userId) {

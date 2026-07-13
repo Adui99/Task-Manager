@@ -43,6 +43,7 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
       if (!selectedUser) return [];
       const res = await fetch(`/api/messages?userId=${selectedUser._id}`);
       if (!res.ok) throw new Error("Failed to fetch messages");
+      queryClient.invalidateQueries({ queryKey: ["unreadMessages"] });
       return res.json();
     },
     enabled: !!selectedUser && open,
@@ -76,7 +77,7 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
     sendMessageMutation.mutate(message);
   };
 
-  const otherUsers = users.filter((u: any) => u._id !== currentUser?._id);
+  const chatUsers = users;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -88,7 +89,7 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
           </div>
           <ScrollArea className="flex-1">
             <div className="p-2 space-y-1">
-              {otherUsers.map((u: any) => (
+              {chatUsers.map((u: any) => (
                 <button
                   key={u._id}
                   onClick={() => setSelectedUser(u)}
@@ -100,9 +101,11 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
                     <AvatarImage src={u.avatar} />
                     <AvatarFallback>{u.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 truncate">
-                    <p className="text-sm font-medium">{u.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                  <div className="flex-1 text-left truncate">
+                    <div className="font-medium text-sm">
+                      {u.name} {currentUser?._id === u._id && <span className="text-muted-foreground font-normal text-xs">(Bạn)</span>}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">{u.email}</div>
                   </div>
                 </button>
               ))}

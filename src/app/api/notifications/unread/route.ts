@@ -1,24 +1,19 @@
 import { NextResponse } from "next/server";
 import { verifyAuth } from "@/lib/auth";
 import dbConnect from "@/lib/mongodb";
-import Message from "@/models/Message";
-import * as jose from "jose";
-
-async function getUserId() {
-  const session = await verifyAuth();
-  return session?.userId || null;
-}
+import Notification from "@/models/Notification";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
     await dbConnect();
-    const userId = await getUserId();
+    const session = await verifyAuth();
+    const userId = session?.userId;
     if (!userId) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-    const unreadCount = await Message.countDocuments({
-      receiver_id: userId,
+    const unreadCount = await Notification.countDocuments({
+      user_id: userId,
       read: false
     });
 

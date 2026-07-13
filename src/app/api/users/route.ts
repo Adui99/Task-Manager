@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
-import { headers } from "next/headers";
+import { verifyAuth } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
 export async function GET() {
   await dbConnect();
-  const headerList = await headers();
-  const role = headerList.get("x-user-role");
+  const session = await verifyAuth();
+  const role = session?.role;
 
   if (!role) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
@@ -19,8 +19,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   await dbConnect();
-  const headerList = await headers();
-  const role = headerList.get("x-user-role");
+  const session = await verifyAuth();
+  const role = session?.role;
 
   if (role !== "admin") {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });

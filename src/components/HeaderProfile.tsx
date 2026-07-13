@@ -12,10 +12,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User as UserIcon, Bell } from "lucide-react";
+import { LogOut, User as UserIcon, Bell, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ChatDialog } from "./ChatDialog";
+import { NotificationList } from "./NotificationList";
 
 export function HeaderProfile({ user }: { user: any }) {
   const router = useRouter();
@@ -49,13 +50,14 @@ export function HeaderProfile({ user }: { user: any }) {
 
   return (
     <div className="flex items-center gap-2">
+      <NotificationList />
       <Button 
         variant="ghost" 
         size="icon" 
         className="relative rounded-full hover:bg-accent cursor-pointer" 
         onClick={() => setChatOpen(true)}
       >
-        <Bell className="h-5 w-5 text-muted-foreground" />
+        <MessageSquare className="h-5 w-5 text-muted-foreground" />
         {unreadCount > 0 && (
           <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
             {unreadCount > 99 ? "99+" : unreadCount}

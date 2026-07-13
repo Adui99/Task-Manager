@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { verifyAuth } from "@/lib/auth";
 import dbConnect from "@/lib/mongodb";
 import Task from "@/models/Task";
 import User from "@/models/User";
-import { sendOverdueReminderEmail } from "@/lib/sendEmail";
+import Message from "@/models/Message";
+import Notification from "@/models/Notification";
 
 export async function GET(req: Request) {
   try {
@@ -10,7 +12,8 @@ export async function GET(req: Request) {
 
     // Verify token from Vercel Cron OR check if user is admin
     const authHeader = req.headers.get("authorization");
-    const userRole = req.headers.get("x-user-role");
+    const session = await verifyAuth();
+    const userRole = session?.role;
     
     const isCronRequest = process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`;
     const isAdminUser = userRole === "admin" || userRole === "vice_admin";
@@ -27,7 +30,7 @@ export async function GET(req: Request) {
       status: { $ne: "done" },
       deadline: { $lt: thresholdTime },
       archived: { $ne: true }
-    }).populate("assignees", "name email");
+    }).populate("assignees", "_id name");
 
     if (!overdueTasks || overdueTasks.length === 0) {
       return NextResponse.json({ 
@@ -43,29 +46,48 @@ export async function GET(req: Request) {
     overdueTasks.forEach(task => {
       const assignees: any[] = task.assignees || [];
       assignees.forEach(assignee => {
-        if (assignee && assignee.email) {
-          const email = assignee.email;
-          if (!tasksByUser.has(email)) {
-            tasksByUser.set(email, { user: assignee, tasks: [] });
+        if (assignee && assignee._id) {
+          const userId = assignee._id.toString();
+          if (!tasksByUser.has(userId)) {
+            tasksByUser.set(userId, { user: assignee, tasks: [] });
           }
-          tasksByUser.get(email)!.tasks.push(task);
+          tasksByUser.get(userId)!.tasks.push(task);
         }
       });
     });
 
-    // Send emails
-    const emailPromises = [];
-    for (const [email, data] of tasksByUser.entries()) {
-      emailPromises.push(
-        sendOverdueReminderEmail(email, data.user.name, data.tasks)
-      );
-    }
+    // Find an admin user to act as the sender of the chat message
+    const adminUser = await User.findOne({ role: "admin" });
+    const adminId = adminUser ? adminUser._id : null;
 
-    await Promise.allSettled(emailPromises);
+    let usersNotified = 0;
+    for (const [userId, data] of tasksByUser.entries()) {
+      // Create bell notification
+      await Notification.create({
+        user_id: userId,
+        title: "Cảnh báo quá hạn (Tự động)",
+        content: `Hệ thống ghi nhận bạn có ${data.tasks.length} công việc đã quá hạn hơn 42 tiếng.`,
+        type: "reminder"
+      });
+
+      // Create chat message if admin exists
+      if (adminId) {
+        const taskListStr = data.tasks.map(t => `- ${t.title}`).join('\\n');
+        const content = `[Hệ thống tự động] Bạn đang có ${data.tasks.length} công việc đã vượt quá thời hạn (Deadline) hơn 42 tiếng:\\n${taskListStr}\\n\\nVui lòng kiểm tra lại bảng Kanban và xử lý ngay lập tức.`;
+        
+        await Message.create({
+          sender_id: adminId,
+          receiver_id: userId,
+          content: content
+        });
+      }
+
+      usersNotified++;
+    }
 
     return NextResponse.json({ 
       message: "Overdue reminders sent successfully", 
-      usersNotified: tasksByUser.size,
+      usersNotified: usersNotified,
       tasksOverdue: overdueTasks.length
     });
 

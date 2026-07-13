@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Task from "@/models/Task";
-import { headers } from "next/headers";
+import { verifyAuth } from "@/lib/auth";
 import mongoose from "mongoose";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   await dbConnect();
-  const headerList = await headers();
-  const userId = headerList.get("x-user-id");
+  const session = await verifyAuth();
+    const userId = session?.userId;
 
   if (!userId) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

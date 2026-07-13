@@ -34,8 +34,10 @@ export const sendTaskAssignmentEmail = async (userEmail: string, taskName: strin
   try {
     const info = await transporter.sendMail(mailOptions);
     console.log("Email sent: " + info.response);
+    return info;
   } catch (error) {
     console.error("Lỗi khi gửi email:", error);
+    throw error;
   }
 };
 
@@ -68,8 +70,10 @@ export const sendOverdueReminderEmail = async (userEmail: string, userName: stri
   try {
     const info = await transporter.sendMail(mailOptions);
     console.log("Overdue reminder email sent: " + info.response);
+    return info;
   } catch (error) {
     console.error("Lỗi khi gửi email nhắc nhở:", error);
+    throw error;
   }
 };
 
@@ -102,7 +106,41 @@ export const sendAdminOverdueEmail = async (adminEmails: string[], tasks: any[])
   try {
     const info = await transporter.sendMail(mailOptions);
     console.log("Admin overdue report email sent: " + info.response);
+    return info;
   } catch (error) {
     console.error("Lỗi khi gửi email báo cáo admin:", error);
+    throw error;
+  }
+};
+
+export const sendForgotPasswordEmail = async (userEmail: string, resetUrl: string) => {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.warn("SMTP credentials missing. Skipping email notification.");
+    return;
+  }
+
+  const mailOptions = {
+    from: `"Mini Kanban AI" <${process.env.SMTP_USER}>`,
+    to: userEmail,
+    subject: `[Bảo mật] Yêu cầu đặt lại mật khẩu`,
+    html: `
+      <h2>Yêu cầu đặt lại mật khẩu</h2>
+      <p>Bạn nhận được email này vì bạn (hoặc ai đó) đã yêu cầu đặt lại mật khẩu cho tài khoản của bạn trên hệ thống Mini Kanban AI.</p>
+      <p>Vui lòng click vào đường link bên dưới để đặt lại mật khẩu của bạn. Link này sẽ hết hạn sau 1 giờ:</p>
+      <p><a href="${resetUrl}">${resetUrl}</a></p>
+      <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này và mật khẩu của bạn sẽ không bị thay đổi.</p>
+      <br/>
+      <hr />
+      <p><small>Đây là email tự động từ hệ thống Mini Kanban AI. Vui lòng không trả lời.</small></p>
+    `,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Forgot password email sent: " + info.response);
+    return info;
+  } catch (error) {
+    console.error("Lỗi khi gửi email quên mật khẩu:", error);
+    throw error;
   }
 };
