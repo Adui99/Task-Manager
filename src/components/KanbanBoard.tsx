@@ -17,20 +17,16 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
+import { Task } from "./kanban/types";
+import { TaskCard } from "./kanban/TaskCard";
+import { FilterControls } from "./kanban/FilterControls";
 
-type Task = {
-  _id: string;
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  order: number;
-  progress?: number;
-  deadline?: string;
-  assignees?: { _id: string; name: string; avatar?: string }[] | string[];
-  comments?: { _id: string; user_id: { _id: string; name: string; avatar?: string }; content: string; createdAt: string }[];
-  createdAt?: string;
-};
+const CreateTaskDialog = dynamic(() => import("./kanban/CreateTaskDialog").then(m => m.CreateTaskDialog), { ssr: false });
+const TaskDetailDialog = dynamic(() => import("./kanban/TaskDetailDialog").then(m => m.TaskDetailDialog), { ssr: false });
+const AdminReminderDialog = dynamic(() => import("./kanban/AdminReminderDialog").then(m => m.AdminReminderDialog), { ssr: false });
+const OverdueModal = dynamic(() => import("./kanban/OverdueModal").then(m => m.OverdueModal), { ssr: false });
+
 
 export function KanbanBoard({ userRole, userId }: { userRole?: string, userId?: string }) {
   const { t, lang, setLang } = useLanguage();
@@ -708,86 +704,16 @@ export function KanbanBoard({ userRole, userId }: { userRole?: string, userId?: 
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                             >
-                              <Card 
+                              <TaskCard 
+                                task={task}
+                                users={users}
+                                userRole={userRole}
+                                isSelected={selectedTaskIds.has(task._id)}
+                                isDragging={snapshot.isDragging}
+                                isOverdue={isTaskOverdue(task)}
+                                onSelect={toggleSelectTask}
                                 onClick={() => { setSelectedTask(task); setIsDetailOpen(true); }}
-                                className={`shadow-sm ${snapshot.isDragging ? "shadow-xl ring-2 ring-primary/40 rotate-3 scale-105" : ""} ${isTaskOverdue(task) ? 'border-destructive' : ''} transition-all duration-200`}
-                              >
-                                <CardContent className="p-4 cursor-grab active:cursor-grabbing bg-background relative group">
-                                  {(userRole === "admin" || userRole === "vice_admin") && (
-                                    <div 
-                                      className={`absolute top-3 right-3 z-10 transition-opacity ${selectedTaskIds.has(task._id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                                      onClick={e => e.stopPropagation()}
-                                    >
-                                      <input 
-                                        type="checkbox" 
-                                        className="w-4 h-4 rounded border-gray-300 text-destructive focus:ring-destructive cursor-pointer"
-                                        checked={selectedTaskIds.has(task._id)}
-                                        onChange={() => toggleSelectTask(task._id)}
-                                      />
-                                    </div>
-                                  )}
-                                  <div className="flex justify-between items-start mb-2 pr-6">
-                                    <div className="flex gap-1.5 flex-wrap">
-                                      <Badge variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'default' : 'secondary'} className="text-[10px] uppercase">
-                                        {task.priority}
-                                      </Badge>
-                                      {isTaskOverdue(task) && (
-                                        <Badge variant="destructive" className="text-[10px] animate-pulse">{t('overdue')}</Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <h4 className="font-medium text-sm mb-1 line-clamp-2">{task.title}</h4>
-                                  {task.description && (
-                                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                                      {task.description}
-                                    </p>
-                                  )}
-                                  
-                                  <div className="mb-3 flex items-center gap-2">
-                                    <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
-                                      <div className="bg-primary h-1.5 rounded-full transition-all duration-300" style={{ width: `${task.progress || 0}%` }}></div>
-                                    </div>
-                                    <span className="text-[10px] font-medium min-w-[20px] text-right">{task.progress || 0}%</span>
-                                  </div>
-                                  
-                                  <div className="flex justify-between items-end mt-3 min-h-[24px]">
-                                    <div className="flex flex-col gap-1">
-                                      {task.createdAt && (
-                                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium bg-muted/50 px-2 py-1 rounded-md">
-                                          <Calendar className="w-3 h-3" />
-                                          <span>Giao: {new Date(task.createdAt).toLocaleString("vi-VN", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
-                                        </div>
-                                      )}
-                                      {task.deadline && (
-                                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium bg-muted/50 px-2 py-1 rounded-md">
-                                          <Calendar className="w-3 h-3" />
-                                          <span>Hạn: {new Date(task.deadline).toLocaleString("vi-VN", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                    {task.assignees && task.assignees.length > 0 && (
-                                      <div className="flex justify-end items-center -space-x-2">
-                                        {task.assignees.map((assignee: any, idx: number) => {
-                                          const assigneeObj = typeof assignee === 'string' 
-                                            ? users.find(u => String(u._id) === assignee) 
-                                            : assignee;
-                                          const assigneeName = assigneeObj?.name || String(assignee);
-                                          
-                                          return assigneeObj?.avatar ? (
-                                            <Avatar key={idx} className="w-6 h-6 border-2 border-background shadow-sm">
-                                              <AvatarImage src={assigneeObj.avatar} />
-                                            </Avatar>
-                                          ) : (
-                                            <div key={idx} className="w-6 h-6 rounded-full bg-muted border-2 border-background shadow-sm flex items-center justify-center overflow-hidden z-10" title={assigneeName}>
-                                              <span className="text-[8px] font-medium">{assigneeName.substring(0,2).toUpperCase()}</span>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
-                                  </div>
-                                </CardContent>
-                              </Card>
+                              />
                             </div>
                           )}
                         </Draggable>
@@ -935,287 +861,34 @@ export function KanbanBoard({ userRole, userId }: { userRole?: string, userId?: 
       })()}
 
       {/* Task Detail Modal */}
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="sm:max-w-[600px] flex flex-col max-h-[85vh] overflow-hidden">
-          {selectedTask && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-xl">{selectedTask.title}</DialogTitle>
-                <div className="flex items-center gap-3 mt-2">
-                  <Badge variant={selectedTask.priority === 'high' ? 'destructive' : selectedTask.priority === 'medium' ? 'default' : 'secondary'} className="uppercase">
-                    {selectedTask.priority}
-                  </Badge>
-                  <Badge variant="outline" className="capitalize">
-                    {selectedTask.status}
-                  </Badge>
-                </div>
-              </DialogHeader>
-              
-              <div className="flex-1 overflow-y-auto pr-4 mt-4 min-h-0">
-                <div className="space-y-6">
-                  {/* Info section */}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    {selectedTask.assignees && selectedTask.assignees.length > 0 && (
-                      <div>
-                        <span className="text-muted-foreground block mb-1">{t('assignee')}</span>
-                        <div className="flex flex-wrap items-center gap-2">
-                          {selectedTask.assignees.map((assignee: any, idx: number) => {
-                            const assigneeObj = typeof assignee === 'string'
-                              ? users.find(u => String(u._id) === assignee)
-                              : assignee;
-                            const assigneeName = assigneeObj?.name || String(assignee);
-                            return (
-                              <div key={idx} className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md border">
-                                {assigneeObj?.avatar ? (
-                                  <Avatar className="w-5 h-5">
-                                    <AvatarImage src={assigneeObj.avatar} />
-                                  </Avatar>
-                                ) : (
-                                  <div className="w-5 h-5 rounded-full bg-muted border flex items-center justify-center overflow-hidden">
-                                    <span className="text-[8px] font-medium">{assigneeName.substring(0,2).toUpperCase()}</span>
-                                  </div>
-                                )}
-                                <span className="text-xs font-medium">{assigneeName}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                    {selectedTask.createdAt && (
-                      <div>
-                        <span className="text-muted-foreground block mb-1">Giao việc</span>
-                        <div className="flex items-center gap-2 font-medium">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          {new Date(selectedTask.createdAt).toLocaleString("vi-VN", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}
-                        </div>
-                      </div>
-                    )}
-                    {selectedTask.deadline && (
-                      <div>
-                        <span className="text-muted-foreground block mb-1">{t('deadline')}</span>
-                        <div className="flex items-center gap-2 font-medium">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          {new Date(selectedTask.deadline).toLocaleString("vi-VN", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {selectedTask.description && (
-                    <div>
-                      <h4 className="font-semibold text-sm mb-2">{t('desc')}</h4>
-                      <p className="text-sm whitespace-pre-wrap">{selectedTask.description}</p>
-                    </div>
-                  )}
-
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="font-semibold text-sm">{t('progress')}</h4>
-                      <span className="text-sm font-medium">{selectedTask.progress || 0}%</span>
-                    </div>
-                    {(() => {
-                      const isAssignee = selectedTask.assignees?.some(a => (typeof a === "string" ? a : (a as any)._id) === userId);
-                      const isAdmin = userRole === "admin" || userRole === "vice_admin";
-                      const canEditProgress = isAdmin || isAssignee;
-                      
-                      return (
-                        <div className="flex items-center gap-4">
-                          <input 
-                            type="range" 
-                            min="0" 
-                            max="100" 
-                            step="5"
-                            value={localProgress}
-                            disabled={!canEditProgress}
-                            onChange={(e) => setLocalProgress(parseInt(e.target.value))}
-                            onPointerUp={() => handleUpdateProgress(selectedTask._id, localProgress)}
-                            className={`flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer ${!canEditProgress ? 'opacity-50 cursor-not-allowed' : 'accent-primary'}`}
-                          />
-                        </div>
-                      )
-                    })()}
-                  </div>
-
-                  <Separator />
-
-                  {/* Comments section */}
-                  <div>
-                    <h4 className="font-semibold text-sm mb-4">{t('comments')}</h4>
-                    <div className="space-y-4 mb-4">
-                      {selectedTask.comments?.map(comment => (
-                        <div key={comment._id} className="flex gap-3">
-                          {comment.user_id?.avatar && (
-                            <Avatar className="w-8 h-8 shrink-0">
-                              <AvatarImage src={comment.user_id.avatar} />
-                            </Avatar>
-                          )}
-                          <div className="flex-1 bg-muted/30 rounded-lg p-3">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="font-medium text-sm">{comment.user_id?.name || t('unknownUser')}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(comment.createdAt).toLocaleString("vi-VN")}
-                              </span>
-                            </div>
-                            <p className="text-sm">{comment.content}</p>
-                          </div>
-                        </div>
-                      ))}
-                      {(!selectedTask.comments || selectedTask.comments.length === 0) && (
-                        <div className="text-sm text-muted-foreground text-center py-4">
-                          {t('noComments')}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex gap-2 items-end">
-                      <div className="flex-1">
-                        <Textarea 
-                          placeholder={`${t('addComment')}...`} 
-                          value={commentContent}
-                          onChange={e => setCommentContent(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              if (commentContent.trim() && !addCommentMutation.isPending) {
-                                handlePostComment();
-                              }
-                            }
-                          }}
-                          className="min-h-[80px] resize-none"
-                        />
-                      </div>
-                      <Button onClick={handlePostComment} disabled={addCommentMutation.isPending || !commentContent.trim()}>
-                        {t('post')}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {userRole === "admin" && (
-                <div className="flex justify-end gap-2 pt-4 border-t mt-4">
-                  <Button variant="destructive" onClick={() => handleDeleteTask(selectedTask._id)} disabled={deleteTaskMutation.isPending}>
-                    {t('deleteTask')}
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
+      <TaskDetailDialog
+        isOpen={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        selectedTask={selectedTask}
+        users={users}
+        userRole={userRole}
+        userId={userId}
+        onDeleteTask={handleDeleteTask}
+        onUpdateProgress={handleUpdateProgress}
+        onAddComment={(taskId, comment) => addCommentMutation.mutate({ taskId, content: comment })}
+        isDeleting={deleteTaskMutation.isPending}
+        isAddingComment={addCommentMutation.isPending}
+      />
       {/* Overdue Reason Modal */}
-      <Dialog open={isOverdueModalOpen} onOpenChange={(open) => { if (!open) { setIsOverdueModalOpen(false); setPendingOverdueAction(null); setOverdueReason(""); } }}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle className="text-destructive flex items-center gap-2">
-              <span className="w-2 h-2 bg-destructive rounded-full animate-pulse"></span>
-              {t('overdueTitle')}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleOverdueSubmit} className="space-y-4 pt-2">
-            <p className="text-sm text-muted-foreground">
-              {t('overdueDescription')} <strong>Done</strong>.
-            </p>
-            <div className="space-y-2">
-              <Label>{t('overdueReasonLabel')}</Label>
-              <Textarea 
-                placeholder={t('overduePlaceholder')} 
-                value={overdueReason}
-                onChange={e => setOverdueReason(e.target.value)}
-                autoFocus
-              />
-            </div>
-            <div className="flex justify-end pt-2">
-              <Button type="submit">{t('confirmBtn')}</Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    {/* Admin Reminder Modal */}
-      <Dialog open={isAdminReminderOpen} onOpenChange={setIsAdminReminderOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <span>✉️</span> {t('adminReminderTitle')}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            {overdueTasksList.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t('noOverdueTasks')}</p>
-            ) : (
-              <>
-                <p className="text-sm text-muted-foreground">{t('selectTasksToSend')}</p>
-                <div className="flex gap-2 mb-2">
-                  <Button variant="outline" size="sm" onClick={() => setSelectedReminderTaskIds(new Set(overdueTasksList.map(t => t._id)))}>
-                    {t('selectAll')}
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setSelectedReminderTaskIds(new Set())}>
-                    {t('deselectAll')}
-                  </Button>
-                </div>
-                <div className="max-h-[300px] overflow-y-auto space-y-2 border rounded-md p-2">
-                  {overdueTasksList.map(task => (
-                    <div key={task._id} className="flex items-start space-x-3 p-2 hover:bg-muted/50 rounded-md">
-                      <input 
-                        type="checkbox"
-                        id={`reminder-${task._id}`} 
-                        className="mt-1 w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                        checked={selectedReminderTaskIds.has(task._id)}
-                        onChange={(e) => {
-                          const newSet = new Set(selectedReminderTaskIds);
-                          if (e.target.checked) newSet.add(task._id);
-                          else newSet.delete(task._id);
-                          setSelectedReminderTaskIds(newSet);
-                        }}
-                      />
-                      <label htmlFor={`reminder-${task._id}`} className="text-sm font-medium leading-none cursor-pointer flex-1">
-                        {task.title}
-                        <span className="block text-xs text-muted-foreground mt-1 font-normal">
-                          Assignees: {task.assignees?.map((a: any) => typeof a === "string" ? a : a.name).join(", ") || 'N/A'}
-                        </span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex justify-end pt-4 border-t">
-                  <Button 
-                    disabled={selectedReminderTaskIds.size === 0 || isSendingReminders}
-                    onClick={async () => {
-                      try {
-                        setIsSendingReminders(true);
-                        const res = await fetch("/api/tasks/send-reminders", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ taskIds: Array.from(selectedReminderTaskIds) })
-                        });
-                        const data = await res.json();
-                        if (res.ok) {
-                          toast.success(
-                            lang === 'vi' 
-                              ? `Đã gửi thông báo cho ${data.usersNotified} người dùng.` 
-                              : `Sent notifications to ${data.usersNotified} users.`
-                          );
-                          setIsAdminReminderOpen(false);
-                        } else {
-                          toast.error(data.message || "Error sending reminders");
-                        }
-                      } catch(e) {
-                        toast.error("Error sending reminders");
-                      } finally {
-                        setIsSendingReminders(false);
-                      }
-                    }}
-                  >
-                    {isSendingReminders ? t('loading') : t('sendSelectedReminders')}
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <OverdueModal
+        isOpen={isOverdueModalOpen}
+        onOpenChange={setIsOverdueModalOpen}
+        onSubmit={(reason) => {
+          setOverdueReason(reason);
+          handleOverdueSubmit({ preventDefault: () => {} } as React.FormEvent);
+        }}
+      />
+      {/* Admin Reminder Modal */}
+      <AdminReminderDialog 
+        isOpen={isAdminReminderOpen}
+        onOpenChange={setIsAdminReminderOpen}
+        overdueTasksList={overdueTasksList}
+      />
     </div>
   );
 }
